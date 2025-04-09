@@ -27,6 +27,8 @@ import os
 import sqlite3
 import requests
 import time
+import matplotlib.pyplot as plt
+import numpy as np
 
 # --------------------------------------------------------------------
 # API KEYS (Replace with your actual keys or pull from environment)
