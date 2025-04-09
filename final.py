@@ -430,3 +430,140 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# VISUALIZER FUNCTIONS - SIEON
+# Fetching movie data to analyze
+def fetch_movie_data_for_analysis():
+    """
+    Fetches movie data from the database for analysis.
+    Includes box office revenue, ratings from different sources, and other relevant data.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # Fetch movie data (with revenue, ratings from both sources)
+    cur.execute("""
+        SELECT m.title, m.release_year, b.domestic_revenue, b.international_revenue,
+               omdb.imdb_rating, tmdb.vote_average
+        FROM Movies m
+        LEFT JOIN BoxOfficeData b ON m.id = b.movie_id
+        LEFT JOIN OMDbData omdb ON m.id = omdb.movie_id
+        LEFT JOIN TMDbData tmdb ON m.id = tmdb.movie_id
+    """)
+    
+    movie_data = cur.fetchall()
+    conn.close()
+    
+    return movie_data
+
+# Calculate profitability
+def calculate_profitability(movie_data):
+    """
+    Calculates the profitability of each movie by comparing its budget (from BoxOffice Mojo) 
+    with its total box office revenue.
+    """
+    profitability_data = []
+    
+    for movie in movie_data:
+        title, release_year, domestic_revenue, international_revenue, imdb_rating, tmdb_rating = movie
+        
+        # Calculate total revenue and profitability
+        total_revenue = domestic_revenue + international_revenue if domestic_revenue and international_revenue else 0
+        # Placeholder budget (this needs to be collected from Box Office Mojo or another source)
+        budget = 100000000  # Example, need to replace with actual budget data
+        profitability = total_revenue - budget
+        profitability_data.append((title, release_year, total_revenue, budget, profitability))
+    
+    return profitability_data
+
+# Visualization of movie revenue comparison (Bar chart)
+def plot_revenue_comparison(profitability_data):
+    """
+    Plots a bar chart comparing movie revenue and budget to visualize profitability.
+    """
+    titles = [data[0] for data in profitability_data]
+    revenues = [data[2] for data in profitability_data]
+    budgets = [data[3] for data in profitability_data]
+    
+    # Plot
+    x = np.arange(len(titles))
+    width = 0.35  # Bar width
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(x - width/2, revenues, width, label='Revenue')
+    ax.bar(x + width/2, budgets, width, label='Budget')
+
+    ax.set_xlabel('Movie Title')
+    ax.set_ylabel('Amount (in billions)')
+    ax.set_title('Revenue vs Budget Comparison')
+    ax.set_xticks(x)
+    ax.set_xticklabels(titles, rotation=90)
+    ax.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+# Visualization of rating comparison (Scatter plot)
+def plot_rating_comparison(movie_data):
+    """
+    Plots a scatter plot comparing IMDB ratings and TMDb ratings with revenue.
+    """
+    imdb_ratings = [data[4] for data in movie_data if data[4] is not None]
+    tmdb_ratings = [data[5] for data in movie_data if data[5] is not None]
+    revenues = [data[2] + data[3] if data[2] and data[3] else 0 for data in movie_data]
+
+    # Scatter plot
+    plt.figure(figsize=(10, 6))
+    plt.scatter(imdb_ratings, revenues, label='IMDB Rating vs Revenue', color='blue')
+    plt.scatter(tmdb_ratings, revenues, label='TMDb Rating vs Revenue', color='green')
+
+    plt.xlabel('Rating')
+    plt.ylabel('Total Revenue')
+    plt.title('Rating vs Box Office Revenue')
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.show()
+
+# Trend analysis of revenue over time
+def plot_revenue_trends(movie_data):
+    """
+    Plots a trend analysis of movie revenue over the years.
+    """
+    years = [data[1] for data in movie_data]
+    revenues = [data[2] + data[3] if data[2] and data[3] else 0 for data in movie_data]
+
+    # Group by year
+    unique_years = sorted(set(years))
+    yearly_revenue = {year: 0 for year in unique_years}
+
+    for i, year in enumerate(years):
+        yearly_revenue[year] += revenues[i]
+
+    # Plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(list(yearly_revenue.keys()), list(yearly_revenue.values()), marker='o', linestyle='-', color='purple')
+
+    plt.xlabel('Year')
+    plt.ylabel('Total Revenue')
+    plt.title('Box Office Revenue Trends Over Time')
+    
+    plt.tight_layout()
+    plt.show()
+
+# Main function to perform analysis and visualization
+def analyze_and_visualize():
+    """
+    Fetches movie data, performs analysis, and generates visualizations.
+    """
+    movie_data = fetch_movie_data_for_analysis()
+    
+    profitability_data = calculate_profitability(movie_data)
+    
+    # Plot comparisons
+    plot_revenue_comparison(profitability_data)
+    plot_rating_comparison(movie_data)
+    plot_revenue_trends(movie_data)
+
+# Running the analysis
+analyze_and_visualize()
