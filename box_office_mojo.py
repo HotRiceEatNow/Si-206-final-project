@@ -31,19 +31,35 @@ def parse_movie_row(row):
     if len(cells) < 10:
         return None
 
+    # Extract and normalize fields
+    release_title = normalize_cell(cells[1].get_text())
+    gross = normalize_cell(cells[5].get_text())
+    theaters = normalize_cell(cells[6].get_text())
+    total_gross = normalize_cell(cells[7].get_text())
+    release_date = normalize_cell(cells[8].get_text())
+    distributor = normalize_cell(cells[9].get_text())
+
+    # If any field is None (i.e., a NULL value), disregard this entire row
+    if None in [release_title, gross, theaters, total_gross, release_date, distributor]:
+        return None
+
     return {
-        "Release Title": normalize_cell(cells[1].get_text()),
-        "Gross": normalize_cell(cells[5].get_text()),
-        "Theaters": normalize_cell(cells[6].get_text()),
-        "Total Gross": normalize_cell(cells[7].get_text()),
-        "Release Date": normalize_cell(cells[8].get_text()),
-        "Distributor": normalize_cell(cells[9].get_text()),
+        "Release Title": release_title,
+        "Gross": gross,
+        "Theaters": theaters,
+        "Total Gross": total_gross,
+        "Release Date": release_date,
+        "Distributor": distributor,
     }
 
 def extract_movies(table):
     """Extract all movies from the table."""
     rows = table.find_all('tr')[1:]
-    return [movie for row in rows if (movie := parse_movie_row(row))]
+    movies = []
+    for row in rows:
+        movie = parse_movie_row(row)
+        if movie:
+            movies.append(movie)
 
 def main():
     html = fetch_html(URL)
