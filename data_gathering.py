@@ -3,15 +3,21 @@
 
 import sqlite3
 import os
+import requests
+import time
 
 DB_NAME = "movies.db"
+
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "ab67f773b96f6a5c2a52209b77fdd8b5")
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "1ad61f09")
+
 
 def create_database():
     """
     Initializes the SQLite database:
     - Genres table mapping unique ID to a Genre string
     - Movies table giving details about each specific movie
-    - ShowtimesData table which is a one-to-many relationship
+    - Showtimes table which is a one-to-many relationship
     """
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -49,10 +55,10 @@ def create_database():
         # imdb_rating, and imdb_votes are from OMDb API
     )
 
-    # -- ShowtimesData table
+    # -- Showtimes table
     cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS ShowtimesData (
+        CREATE TABLE IF NOT EXISTS Showtimes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             movie_id INTEGER,
             show_date TEXT,
@@ -87,7 +93,194 @@ def set_last_page_retrieved(page_num):
         f.write(str(page_num))
 
 
+def fetch_tmdb_popular_movies(page):
+    """
+    Fetches 'popular' movies from TMDb for a given page number.
+    Returns a list of movie dictionaries from the JSON response.
+    """
+    url = "https://api.themoviedb.org/3/movie/popular"
+    params = {
+        "api_key": TMDB_API_KEY,
+        "language": "en-US",
+        "page": page
+    }
+
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
+        print(f"Error fetching TMDb data (status code {response.status_code})")
+        return []
+
+    data = response.json()
+    # 'results' holds the list of movies
+    return data.get("results", [])
+
+
+def get_tmdb_movie_details(tmdb_id):
+    """
+    Given a TMDb movie ID, fetch the Movie Details endpoint to get:
+       - imdb_id
+       - budget
+    Returns (imdb_id, budget).
+    If request fails or data is missing, returns (None, 0).
+    """
+    url = f"https://api.themoviedb.org/3/movie/{tmdb_id}"
+    params = {"api_key": TMDB_API_KEY, "language": "en-US"}
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        print(f"Error fetching TMDb details for movie_id={tmdb_id} (status {response.status_code})")
+        return None, 0
+
+    data = response.json()
+    imdb_id = data.get("imdb_id", None)
+    budget = data.get("budget", 0)
+    return imdb_id, budget
+
+
+def fetch_omdb_data(imdb_id):
+    """
+    Fetch detailed data for a movie from the OMDb API using the movie's IMDb ID.
+    Returns a dict with (genre, imdbRating, imdbVotes) or None if not found.
+    """
+    if not imdb_id or imdb_id == "N/A":
+        return None
+
+    url = "http://www.omdbapi.com/"
+    params = {
+        "apikey": OMDB_API_KEY,
+        "i": imdb_id,
+        "plot": "short"
+    }
+    response = requests.get(url, params=params)
+
+    if response.status_code != 200:
+        print(f"Error fetching OMDb data for IMDb ID {imdb_id}")
+        return None
+
+    data = response.json()
+    if data.get("Response") == "False":
+        print(f"OMDb could not find data for IMDb ID {imdb_id}")
+        return None
+
+    # Extract fields of interest
+    result = {
+        "Genre": data.get("Genre", "N/A"),
+        "imdbRating": data.get("imdbRating", "N/A"),
+        "imdbVotes": data.get("imdbVotes", "N/A")
+    }
+    return result
+
+
+def get_or_create_genre_id(genre_name):
+    """
+    Returns the genre_id from the Genres table.
+    If the genre does not exist, inserts it and returns the new ID.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # Normalize genre_name (strip spaces, make consistent case if needed)
+    genre_name = genre_name.strip()
+
+    # Check if the genre already exists
+    cur.execute("SELECT id FROM Genres WHERE name = ?", (genre_name,))
+    row = cur.fetchone()
+
+    if row:
+        genre_id = row[0]
+    else:
+        # Insert the new genre
+        cur.execute("INSERT INTO Genres (name) VALUES (?)", (genre_name,))
+        genre_id = cur.lastrowid
+        conn.commit()
+
+    conn.close()
+    return genre_id
+
+
+def insert_or_update_movie(
+    title,
+    release_year,
+    genre_id,
+    tmdb_id,
+    imdb_id,
+    popularity,
+    vote_count,
+    average_vote,
+    budget,
+    imdb_rating,
+    imdb_votes
+):
+    """
+    Inserts a new movie or updates an existing one based on tmdb_id.
+    Returns the movie_id.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # Check if movie with the given tmdb_id already exists
+    cur.execute("SELECT id FROM Movies WHERE tmdb_id = ?", (tmdb_id,))
+    row = cur.fetchone()
+
+    if row:
+        # Update existing record
+        movie_id = row[0]
+        cur.execute(
+            """
+            UPDATE Movies
+            SET title = ?, release_year = ?, genre_id = ?, imdb_id = ?, popularity = ?,
+                vote_count = ?, average_vote = ?, budget = ?, imdb_rating = ?, imdb_votes = ?
+            WHERE id = ?
+            """,
+            (
+                title,
+                release_year,
+                genre_id,
+                imdb_id,
+                popularity,
+                vote_count,
+                average_vote,
+                budget,
+                imdb_rating,
+                imdb_votes,
+                movie_id,
+            ),
+        )
+    else:
+        # Insert new record
+        cur.execute(
+            """
+            INSERT INTO Movies (
+                title, release_year, genre_id, tmdb_id, imdb_id, popularity,
+                vote_count, average_vote, budget, imdb_rating, imdb_votes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                title,
+                release_year,
+                genre_id,
+                tmdb_id,
+                imdb_id,
+                popularity,
+                vote_count,
+                average_vote,
+                budget,
+                imdb_rating,
+                imdb_votes,
+            ),
+        )
+        movie_id = cur.lastrowid
+
+    conn.commit()
+    conn.close()
+    return movie_id
+
+
 def main():
+    """
+    The main function to gather data from the various sources
+    (Box Office Mojo via BeautifulSoup, TMDb API, OMDb API, SerpAPI).
+    """
     # create SQLite database if it does not already exist
     create_database()
 
@@ -160,13 +353,13 @@ def main():
         )
 
         # Fetch SerpApi showtimes (slots_count) for this movie title
-        slots_count = fetch_showtime_slots(title)
-        insert_showtimes_data(movie_id, slots_count)
+        # slots_count = fetch_showtime_slots(title)
+        # insert_showtimes_data(movie_id, slots_count)
 
         # Be kind to the APIs
         time.sleep(0.3)
 
     set_last_page_retrieved(next_page)
     print(f"Successfully processed page {next_page}. Run again to fetch some more data.")
-    show_data()
+    # show_data()
 
