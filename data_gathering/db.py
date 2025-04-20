@@ -226,7 +226,7 @@ def print_database_state():
     Gross      : {fmt_str(m[12])}
     Theaters   : {fmt_str(m[13])}
     Total Gross: {fmt_str(m[14])}
-    Distributor : {fmt_str(m[15])}
+    Distributor: {fmt_str(m[15])}
 """)
     else:
         print("  (empty)")

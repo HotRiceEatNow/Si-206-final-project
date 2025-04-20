@@ -1,11 +1,10 @@
 import time
-import sqlite3
 
-from config import DB_NAME, LIMIT, BOXOFFICEMOJO_URL
+from config import LIMIT
 from db import create_database, get_or_create_genre_id, insert_or_update_movie, print_database_state
 from tmdb import fetch_tmdb_popular_movies, get_tmdb_movie_details, get_last_page_retrieved, set_last_page_retrieved
 from omdb import fetch_omdb_data
-from boxofficemojo import fetch_html, parse_html, extract_table, extract_movies
+from boxofficemojo import fetch_bom_data_for_title
 
 def main():
     """
@@ -86,6 +85,9 @@ def main():
         else:
             print("IMDb ID is not available; skipping OMDb fetch.")
 
+        gross, theaters, total_gross, distributor = fetch_bom_data_for_title(title)
+        print(f"  [BoxOfficeMojo] for '{title}': gross={gross}, theaters={theaters}, total_gross={total_gross}, distributor={distributor}")        
+
         # Insert/update Movies table
         movie_id = insert_or_update_movie(
             title=title,
@@ -99,8 +101,11 @@ def main():
             budget=budget,
             imdb_rating=imdb_rating,
             imdb_votes=imdb_votes,
+            gross=gross,
+            theaters=theaters,
+            total_gross=total_gross,
+            distributor=distributor
         )
-
         print(f"> Inserted/Updated Movie ID: {movie_id}")
 
         # Fetch showtimes from Serp here
@@ -112,59 +117,6 @@ def main():
 
     set_last_page_retrieved(next_page)
     print(f"\nSuccessfully processed page {next_page}.")
-
-    # -- Box Office Mojo scraping pipeline
-    print("\nFetching Box Office Mojo top movies for 2025…")
-    html  = fetch_html(BOXOFFICEMOJO_URL)
-    soup  = parse_html(html)
-    table = extract_table(soup)
-    if not table:
-        print("Could not find the Box Office Mojo table.")
-    else:
-        scraped = extract_movies(table)
-        to_add  = scraped[:LIMIT]
-        print(f"Found {len(scraped)} movies on BOM, processing up to {len(to_add)} titles:")
-
-        for idx, info in enumerate(to_add, 1):
-            print(f"{idx:>2}. {info['Release Title']}")
-
-        for info in to_add:
-            title       = info["Release Title"]
-            gross       = info["Gross"]
-            theaters    = info["Theaters"]
-            total_gross = info["Total Gross"]
-            distributor = info["Distributor"]
-
-            conn = sqlite3.connect(DB_NAME)
-            cur  = conn.cursor()
-
-            # Check if already in DB
-            cur.execute("SELECT id FROM Movies WHERE title = ?", (title,))
-            row = cur.fetchone()
-            if row:
-                movie_id = row[0]
-                # Update only the BOM fields
-                cur.execute("""
-                    UPDATE Movies
-                    SET gross       = ?,
-                        theaters    = ?,
-                        total_gross = ?,
-                        distributor = ?
-                    WHERE id = ?
-                """, (gross, theaters, total_gross, distributor, movie_id))
-                print(f"  [UPDATE] '{title}' (id={movie_id}): gross→{gross}, theaters→{theaters}, total_gross→{total_gross}, distributor→{distributor}")
-            else:
-                # Insert a fresh row with just the BOM fields (others stay NULL)
-                cur.execute("""
-                    INSERT INTO Movies
-                        (title, gross, theaters, total_gross, distributor)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (title, gross, theaters, total_gross, distributor))
-                movie_id = cur.lastrowid
-                print(f"  [INSERT] '{title}' as id={movie_id}")
-
-            conn.commit()
-            conn.close()
 
     print("\n==== DATABASE STATE AFTER RUN ====")
     print_database_state()

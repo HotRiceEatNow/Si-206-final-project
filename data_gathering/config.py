@@ -4,4 +4,4 @@ SERPAPI_API_KEY = "ec44919024d8492b657c179a691b512169778a1e5d8c4f34ae2d2738db9d6
 BOXOFFICEMOJO_URL = "https://www.boxofficemojo.com/year/2025/"
 
 DB_NAME = "../movies.db"
-LIMIT   = 5
+LIMIT   = 25

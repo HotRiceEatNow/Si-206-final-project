@@ -1,4 +1,5 @@
 import requests
+from config import BOXOFFICEMOJO_URL
 from bs4 import BeautifulSoup
 
 def fetch_html(url):
@@ -62,3 +63,28 @@ def extract_movies(table):
             movies.append(movie)
     
     return movies
+
+
+def fetch_bom_data_for_title(title: str):
+    """
+    Scrape the BOM page and return a 4-tuple of
+      (gross, theaters, total_gross, distributor)
+    for the given movie title, or (None, None, None, None) if not found.
+    """
+    html = fetch_html(BOXOFFICEMOJO_URL)
+    soup = parse_html(html)
+    table = extract_table(soup)
+    if not table:
+        return (None, None, None, None)
+
+    for row in table.find_all('tr')[1:]:
+        info = parse_movie_row(row)
+        if info and info["Release Title"] == title:
+            return (
+                info["Gross"],
+                info["Theaters"],
+                info["Total Gross"],
+                info["Distributor"],
+            )
+
+    return (None, None, None, None)
