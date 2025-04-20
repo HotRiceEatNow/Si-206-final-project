@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 from config import DB_NAME
 
 def create_database():
@@ -11,7 +12,7 @@ def create_database():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    # -- Genres table (basic identifiers)
+    # -- Genres table (to avoid string duplication)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS Genres (
@@ -21,27 +22,38 @@ def create_database():
         """
     )
 
+    # -- Distributors table (to avoid string duplication)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS Distributors (
+            id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT    UNIQUE
+        )
+        """
+    )
+
     # -- Movies table (combined TMDb and OMDb data)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS Movies (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            release_year INTEGER,
-            genre_id INTEGER,
-            tmdb_id INTEGER UNIQUE,
-            imdb_id TEXT UNIQUE,
-            popularity REAL,
-            vote_count INTEGER,
-            average_vote REAL,
-            budget INTEGER,
-            imdb_rating REAL,
-            imdb_votes INTEGER,
-            gross TEXT,
-            theaters INTEGER,
-            total_gross TEXT,
-            distributor TEXT,
-            FOREIGN KEY(genre_id) REFERENCES Genres(id)
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            title         TEXT,
+            release_year  INTEGER,
+            genre_id      INTEGER,
+            tmdb_id       INTEGER UNIQUE,
+            imdb_id       TEXT    UNIQUE,
+            popularity    REAL,
+            vote_count    INTEGER,
+            average_vote  REAL,
+            budget        INTEGER,
+            imdb_rating   REAL,
+            imdb_votes    INTEGER,
+            gross         TEXT,
+            theaters      INTEGER,
+            total_gross   TEXT,
+            distributor_id INTEGER,
+            FOREIGN KEY(genre_id)      REFERENCES Genres(id),
+            FOREIGN KEY(distributor_id) REFERENCES Distributors(id)
         )
         """
         # popularity, vote_count, average_vote, and budget are from TMDb API
@@ -90,6 +102,27 @@ def get_or_create_genre_id(genre_name):
 
     conn.close()
     return genre_id
+
+
+def get_or_create_distributor_id(name):
+    """
+    Returns the distributor’s ID, inserting into Distributors if needed.
+    """
+    if not name:
+        return None
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM Distributors WHERE name = ?", (name,))
+    row = cur.fetchone()
+    if row:
+        dist_id = row[0]
+    else:
+        cur.execute("INSERT INTO Distributors (name) VALUES (?)", (name,))
+        dist_id = cur.lastrowid
+        conn.commit()
+    conn.close()
+    return dist_id
 
 
 def insert_or_update_movie(
@@ -142,7 +175,7 @@ def insert_or_update_movie(
                 gross = ?,
                 theaters = ?,
                 total_gross = ?,
-                distributor = ?
+                distributor_id = ?
             WHERE id = ?
             ''',
             (title, release_year, genre_id, tmdb_id, imdb_id,
@@ -157,7 +190,7 @@ def insert_or_update_movie(
                 title, release_year, genre_id, tmdb_id, imdb_id,
                 popularity, vote_count, average_vote, budget,
                 imdb_rating, imdb_votes, gross, theaters,
-                total_gross, distributor
+                total_gross, distributor_id
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''',
             (title, release_year, genre_id, tmdb_id, imdb_id,
@@ -172,6 +205,47 @@ def insert_or_update_movie(
     return movie_id
 
 
+def insert_showtimes_data(movie_id, slots_count):
+    """
+    Inserts or updates the daily showtimes count in the Showtimes table
+    for the given movie_id. We'll store the date as 'today'.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    today_str = date.today().isoformat()
+
+    # Check if we already inserted data for this movie/today
+    cur.execute(
+        "SELECT id FROM Showtimes WHERE movie_id = ? AND show_date = ?",
+        (movie_id, today_str)
+    )
+    row = cur.fetchone()
+
+    if row:
+        # Update existing record for today's date
+        cur.execute(
+            """
+            UPDATE Showtimes
+            SET slots_count = ?
+            WHERE movie_id = ? AND show_date = ?
+            """,
+            (slots_count, movie_id, today_str)
+        )
+    else:
+        # Insert new record
+        cur.execute(
+            """
+            INSERT INTO Showtimes (movie_id, show_date, slots_count)
+            VALUES (?, ?, ?)
+            """,
+            (movie_id, today_str, slots_count)
+        )
+
+    conn.commit()
+    conn.close()
+
+
 def print_database_state():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -182,6 +256,15 @@ def print_database_state():
     if genres:
         for g in genres:
             print(f"  {g[0]}: {g[1]}")
+    else:
+        print("  (empty)")
+
+    print("\n-- Distributors Table --")
+    cur.execute("SELECT id, name FROM Distributors ORDER BY id")
+    distributors = cur.fetchall()
+    if distributors:
+        for d in distributors:
+            print(f"  {d[0]}: {d[1]}")
     else:
         print("  (empty)")
 
@@ -204,7 +287,7 @@ def print_database_state():
             gross,
             theaters,
             total_gross,
-            distributor
+            distributor_id
         FROM Movies
         ORDER BY id DESC
     """)
@@ -228,6 +311,19 @@ def print_database_state():
     Total Gross: {fmt_str(m[14])}
     Distributor: {fmt_str(m[15])}
 """)
+    else:
+        print("  (empty)")
+
+    print("\n-- Showtimes Table --")
+    cur.execute("""
+        SELECT id, movie_id, show_date, slots_count
+        FROM Showtimes
+        ORDER BY id DESC
+    """)
+    showtimes = cur.fetchall()
+    if showtimes:
+        for s in showtimes:
+            print(f"  {s[0]}: movie_id={s[1]} | date={s[2]} | slots={s[3]}")
     else:
         print("  (empty)")
 
