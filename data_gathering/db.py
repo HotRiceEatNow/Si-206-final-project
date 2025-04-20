@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import date
-from config import DB_NAME
+from config import DB_PATH
 
 def create_database():
     """
@@ -9,7 +9,7 @@ def create_database():
     - Movies table giving details about each specific movie
     - Showtimes table which gives info about showtimes for a movie (one-to-many)
     """
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     # -- Genres table (to avoid string duplication)
@@ -111,7 +111,7 @@ def get_or_create_distributor_id(name):
     if not name:
         return None
 
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("SELECT id FROM Distributors WHERE name = ?", (name,))
     row = cur.fetchone()
@@ -146,7 +146,7 @@ def insert_or_update_movie(
     Insert a new movie or update an existing one based on tmdb_id or title.
     Returns the movie_id.
     """
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     # Try match on tmdb_id first, fallback to title
@@ -247,7 +247,7 @@ def insert_showtimes_data(movie_id, slots_count):
 
 
 def print_database_state():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     print("\n-- Genres Table --")
