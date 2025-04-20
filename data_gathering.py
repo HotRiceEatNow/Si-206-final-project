@@ -5,13 +5,16 @@ import sqlite3
 import os
 import requests
 import time
+from bs4 import BeautifulSoup
+
 
 DB_NAME = "movies.db"
 
-# TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "ab67f773b96f6a5c2a52209b77fdd8b5")
-TMDB_API_KEY = "ab67f773b96f6a5c2a52209b77fdd8b5"
-# OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "1ad61f09")
-OMDB_API_KEY = "1ad61f09"
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "ab67f773b96f6a5c2a52209b77fdd8b5")
+OMDB_API_KEY = os.environ.get("OMDB_API_KEY", "1ad61f09")
+SERPAPI_API_KEY = os.environ.get("SERPAPI_API_KEY", "ec44919024d8492b657c179a691b512169778a1e5d8c4f34ae2d2738db9d6415")
+
+LIMIT = 5
 
 
 def create_database():
@@ -50,6 +53,10 @@ def create_database():
             budget INTEGER,
             imdb_rating REAL,
             imdb_votes INTEGER,
+            gross TEXT,
+            theaters INTEGER,
+            total_gross TEXT,
+            distributor TEXT,
             FOREIGN KEY(genre_id) REFERENCES Genres(id)
         )
         """
@@ -202,80 +209,231 @@ def get_or_create_genre_id(genre_name):
 
 def insert_or_update_movie(
     title,
-    release_year,
-    genre_id,
-    tmdb_id,
-    imdb_id,
-    popularity,
-    vote_count,
-    average_vote,
-    budget,
-    imdb_rating,
-    imdb_votes
+    release_year=None,
+    genre_id=None,
+    tmdb_id=None,
+    imdb_id=None,
+    popularity=None,
+    vote_count=None,
+    average_vote=None,
+    budget=None,
+    imdb_rating=None,
+    imdb_votes=None,
+    gross=None,
+    theaters=None,
+    total_gross=None,
+    distributor=None
 ):
     """
-    Inserts a new movie or updates an existing one based on tmdb_id.
+    Insert a new movie or update an existing one based on tmdb_id or title.
+    Handles extended fields including gross, theaters, total_gross, distributor.
     Returns the movie_id.
     """
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    # Check if movie with the given tmdb_id already exists
-    cur.execute("SELECT id FROM Movies WHERE tmdb_id = ?", (tmdb_id,))
+    # Try match on tmdb_id first, fallback to title
+    if tmdb_id:
+        cur.execute("SELECT id FROM Movies WHERE tmdb_id = ?", (tmdb_id,))
+    else:
+        cur.execute("SELECT id FROM Movies WHERE title = ?", (title,))
     row = cur.fetchone()
 
     if row:
-        # Update existing record
         movie_id = row[0]
         cur.execute(
-            """
-            UPDATE Movies
-            SET title = ?, release_year = ?, genre_id = ?, imdb_id = ?, popularity = ?,
-                vote_count = ?, average_vote = ?, budget = ?, imdb_rating = ?, imdb_votes = ?
+            '''
+            UPDATE Movies SET
+                title = ?,
+                release_year = ?,
+                genre_id = ?,
+                tmdb_id = ?,
+                imdb_id = ?,
+                popularity = ?,
+                vote_count = ?,
+                average_vote = ?,
+                budget = ?,
+                imdb_rating = ?,
+                imdb_votes = ?,
+                gross = ?,
+                theaters = ?,
+                total_gross = ?,
+                distributor = ?
             WHERE id = ?
-            """,
-            (
-                title,
-                release_year,
-                genre_id,
-                imdb_id,
-                popularity,
-                vote_count,
-                average_vote,
-                budget,
-                imdb_rating,
-                imdb_votes,
-                movie_id,
-            ),
+            ''',
+            (title, release_year, genre_id, tmdb_id, imdb_id,
+             popularity, vote_count, average_vote, budget,
+             imdb_rating, imdb_votes, gross, theaters,
+             total_gross, distributor, movie_id)
         )
     else:
-        # Insert new record
         cur.execute(
-            """
+            '''
             INSERT INTO Movies (
-                title, release_year, genre_id, tmdb_id, imdb_id, popularity,
-                vote_count, average_vote, budget, imdb_rating, imdb_votes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                title,
-                release_year,
-                genre_id,
-                tmdb_id,
-                imdb_id,
-                popularity,
-                vote_count,
-                average_vote,
-                budget,
-                imdb_rating,
-                imdb_votes,
-            ),
+                title, release_year, genre_id, tmdb_id, imdb_id,
+                popularity, vote_count, average_vote, budget,
+                imdb_rating, imdb_votes, gross, theaters,
+                total_gross, distributor
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''',
+            (title, release_year, genre_id, tmdb_id, imdb_id,
+             popularity, vote_count, average_vote, budget,
+             imdb_rating, imdb_votes, gross, theaters,
+             total_gross, distributor)
         )
         movie_id = cur.lastrowid
 
     conn.commit()
     conn.close()
     return movie_id
+
+
+
+# def fetch_showtime_slots(movie_title):
+#     """
+#     Calls SerpApi's Showtimes endpoint to scrape a movie's showtimes from Google.
+#     Returns an integer count of how many times the movie is playing (slots_count) or 0 if none found or if there's an error.
+#     """
+#     today_str = date.today().isoformat()
+#     query_str = f"{movie_title} showtimes near me"
+
+#     print(f"  [fetch_showtime_slots] Querying SerpApi for '{movie_title}' on {today_str}")
+
+#     url = "https://serpapi.com/search.json"
+#     params = {
+#         "engine": "google_showtimes",
+#         "q": query_str,
+#         "hl": "en",
+#         "gl": "us",
+#         "location": "New York,NY,USA",
+#         "start_date": today_str,
+#         "end_date": today_str,
+#         "movie_times": "1",
+#         "api_key": SERPAPI_API_KEY
+#     }
+
+#     response = requests.get(url, params=params)
+
+#     if response.status_code != 200:
+#         print(f"  [ERROR] SerpApi returned status {response.status_code} for '{movie_title}'")
+#         return 0
+#     else:
+#         print(f"  [fetch_showtime_slots] Got response for '{movie_title}' (status {response.status_code})")
+
+#     data = response.json()
+
+#     # print(json.dumps(data, indent=2))
+
+#     showtimes_results = data.get("showtimes", [])
+#     total_slots = 0
+
+#     for theater_info in showtimes_results:
+#         for show_date_info in theater_info.get("showing", []):
+#             times_list = show_date_info.get("times", [])
+#             total_slots += len(times_list)
+
+#     print(f"  [fetch_showtime_slots] Found {total_slots} showtime slots for '{movie_title}'")
+#     return total_slots
+
+
+# def insert_showtimes_data(movie_id, slots_count):
+#     """
+#     Inserts or updates the daily showtimes count in the Showtimes table
+#     for the given movie_id. We'll store the date as 'today'.
+#     """
+#     conn = sqlite3.connect(DB_NAME)
+#     cur = conn.cursor()
+
+#     today_str = date.today().isoformat()
+#     print(f"  [insert_showtimes_data] Storing {slots_count} slots for movie_id={movie_id} on {today_str}")
+
+#     cur.execute(
+#         "SELECT id FROM Showtimes WHERE movie_id = ? AND show_date = ?",
+#         (movie_id, today_str)
+#     )
+#     row = cur.fetchone()
+
+#     if row:
+#         cur.execute(
+#             """
+#             UPDATE Showtimes
+#             SET slots_count = ?
+#             WHERE movie_id = ? AND show_date = ?
+#             """,
+#             (slots_count, movie_id, today_str)
+#         )
+#         print(f"  [DB] Updated existing showtime record for movie_id={movie_id}")
+#     else:
+#         cur.execute(
+#             """
+#             INSERT INTO Showtimes (movie_id, show_date, slots_count)
+#             VALUES (?, ?, ?)
+#             """,
+#             (movie_id, today_str, slots_count)
+#         )
+#         print(f"  [DB] Inserted new showtime record for movie_id={movie_id}")
+
+#     conn.commit()
+#     conn.close()
+
+URL = "https://www.boxofficemojo.com/year/2025/"
+
+def fetch_html(url):
+    """Fetch HTML content from a given URL."""
+    response = requests.get(url)
+    response.raise_for_status()
+    return response.text
+
+def parse_html(html):
+    """Parse HTML using BeautifulSoup and return the soup object."""
+    return BeautifulSoup(html, 'html.parser')
+
+def extract_table(soup):
+    """Extract the movie table element from the parsed soup."""
+    return soup.select_one('div#table table')
+
+def normalize_cell(text):
+    """Normalize cell value: convert '-' to None, strip text otherwise."""
+    stripped = text.strip()
+    return None if stripped == "-" else stripped
+
+def parse_movie_row(row):
+    """Parse a single row of movie data and return it as a dictionary."""
+    cells = row.find_all('td')
+    if len(cells) < 10:
+        return None
+
+    # Extract and normalize fields
+    release_title = normalize_cell(cells[1].get_text())
+    gross = normalize_cell(cells[5].get_text())
+    theaters = normalize_cell(cells[6].get_text())
+    total_gross = normalize_cell(cells[7].get_text())
+    release_date = normalize_cell(cells[8].get_text())
+    distributor = normalize_cell(cells[9].get_text())
+
+    # If any field is None (i.e., a NULL value), disregard this entire row
+    if None in [release_title, gross, theaters, total_gross, release_date, distributor]:
+        return None
+
+    return {
+        "Release Title": release_title,
+        "Gross": gross,
+        "Theaters": theaters,
+        "Total Gross": total_gross,
+        "Release Date": release_date,
+        "Distributor": distributor,
+    }
+
+def extract_movies(table):
+    """Extract all movies from the table."""
+    rows = table.find_all('tr')[1:]
+    movies = []
+    for row in rows:
+        movie = parse_movie_row(row)
+        if movie:
+            movies.append(movie)
+    
+    return movies
 
 
 def print_database_state():
@@ -292,25 +450,48 @@ def print_database_state():
         print("  (empty)")
 
     print("\n-- Movies Table --")
+    # select all of the columns in your updated schema
     cur.execute("""
-        SELECT id, title, release_year, genre_id, tmdb_id, imdb_id, popularity, vote_count,
-            average_vote, budget, imdb_rating, imdb_votes
+        SELECT
+            id,
+            title,
+            release_year,
+            genre_id,
+            tmdb_id,
+            imdb_id,
+            popularity,
+            vote_count,
+            average_vote,
+            budget,
+            imdb_rating,
+            imdb_votes,
+            gross,
+            theaters,
+            total_gross,
+            distributor
         FROM Movies
         ORDER BY id DESC
     """)
     movies = cur.fetchall()
 
-    def fmt(val, fmt_str="{:,}"):
+    def fmt_num(val, fmt_str="{:,}"):
         return fmt_str.format(val) if val is not None else "None"
+
+    def fmt_str(val):
+        return val if val is not None else "None"
 
     if movies:
         for m in movies:
             print(f"""  {m[0]}: {m[1]} ({m[2]})
-        Genre ID: {m[3]}
-        TMDb ID: {m[4]} | IMDb ID: {m[5]}
-        Popularity: {fmt(m[6], "{:.2f}")} | Vote Count: {fmt(m[7])} | Avg Vote: {fmt(m[8], "{:.1f}")}
-        Budget: ${fmt(m[9])} | IMDb Rating: {fmt(m[10], "{:.1f}")} | IMDb Votes: {fmt(m[11])}
-    """)
+    Genre ID   : {fmt_num(m[3])}
+    TMDb ID    : {fmt_num(m[4])}   IMDb ID : {fmt_str(m[5])}
+    Popularity : {fmt_num(m[6], "{:.2f}")}   Vote Count : {fmt_num(m[7])}   Avg Vote : {fmt_num(m[8], "{:.1f}")}
+    Budget     : ${fmt_num(m[9])}   IMDb Rating : {fmt_num(m[10], "{:.1f}")}   IMDb Votes : {fmt_num(m[11])}
+    Gross      : {fmt_str(m[12])}
+    Theaters   : {fmt_str(m[13])}
+    Total Gross: {fmt_str(m[14])}
+    Distributor : {fmt_str(m[15])}
+""")
     else:
         print("  (empty)")
 
@@ -337,7 +518,7 @@ def main():
         return
 
     # Limit to 25 movies
-    movies_to_process = movies[:25]
+    movies_to_process = movies[:LIMIT]
 
     print("\n==== MOVIES TO PROCESS ====")
     for idx, movie in enumerate(movies_to_process, 1):
@@ -413,7 +594,8 @@ def main():
 
         print(f"> Inserted/Updated Movie ID: {movie_id}")
 
-        # Optionally fetch showtimes here
+        # Fetch showtimes from Serp here
+        # print(f"> Fetching showtimes for: '{title}'")
         # slots_count = fetch_showtime_slots(title)
         # insert_showtimes_data(movie_id, slots_count)
 
@@ -421,6 +603,59 @@ def main():
 
     set_last_page_retrieved(next_page)
     print(f"\nSuccessfully processed page {next_page}.")
+
+    # -- Box Office Mojo scraping pipeline
+    print("\nFetching Box Office Mojo top movies for 2025…")
+    html  = fetch_html(URL)
+    soup  = parse_html(html)
+    table = extract_table(soup)
+    if not table:
+        print("Could not find the Box Office Mojo table.")
+    else:
+        scraped = extract_movies(table)
+        to_add  = scraped[:LIMIT]
+        print(f"Found {len(scraped)} movies on BOM, processing up to {len(to_add)} titles:")
+
+        for idx, info in enumerate(to_add, 1):
+            print(f"{idx:>2}. {info['Release Title']}")
+
+        for info in to_add:
+            title       = info["Release Title"]
+            gross       = info["Gross"]
+            theaters    = info["Theaters"]
+            total_gross = info["Total Gross"]
+            distributor = info["Distributor"]
+
+            conn = sqlite3.connect(DB_NAME)
+            cur  = conn.cursor()
+
+            # Check if already in DB
+            cur.execute("SELECT id FROM Movies WHERE title = ?", (title,))
+            row = cur.fetchone()
+            if row:
+                movie_id = row[0]
+                # Update only the BOM fields
+                cur.execute("""
+                    UPDATE Movies
+                    SET gross       = ?,
+                        theaters    = ?,
+                        total_gross = ?,
+                        distributor = ?
+                    WHERE id = ?
+                """, (gross, theaters, total_gross, distributor, movie_id))
+                print(f"  [UPDATE] '{title}' (id={movie_id}): gross→{gross}, theaters→{theaters}, total_gross→{total_gross}, distributor→{distributor}")
+            else:
+                # Insert a fresh row with just the BOM fields (others stay NULL)
+                cur.execute("""
+                    INSERT INTO Movies
+                        (title, gross, theaters, total_gross, distributor)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (title, gross, theaters, total_gross, distributor))
+                movie_id = cur.lastrowid
+                print(f"  [INSERT] '{title}' as id={movie_id}")
+
+            conn.commit()
+            conn.close()
 
     print("\n==== DATABASE STATE AFTER RUN ====")
     print_database_state()
