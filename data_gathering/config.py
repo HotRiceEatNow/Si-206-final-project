@@ -1,0 +1,7 @@
+TMDB_API_KEY = "ab67f773b96f6a5c2a52209b77fdd8b5"
+OMDB_API_KEY = "1ad61f09"
+SERPAPI_API_KEY = "ec44919024d8492b657c179a691b512169778a1e5d8c4f34ae2d2738db9d6415"
+BOXOFFICEMOJO_URL = "https://www.boxofficemojo.com/year/2025/"
+
+DB_NAME = "../movies.db"
+LIMIT   = 5
