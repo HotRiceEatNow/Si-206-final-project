@@ -53,18 +53,6 @@ def parse_movie_row(row):
     }
 
 
-def extract_movies(table):
-    """Extract all movies from the table."""
-    rows = table.find_all('tr')[1:]
-    movies = []
-    for row in rows:
-        movie = parse_movie_row(row)
-        if movie:
-            movies.append(movie)
-    
-    return movies
-
-
 def fetch_bom_data_for_title(title: str):
     """
     Scrape the BOM page and return a 4-tuple of
