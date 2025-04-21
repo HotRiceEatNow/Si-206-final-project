@@ -1,5 +1,5 @@
 import requests
-from config import OMDB_API_KEY, debug_print
+from config import OMDB_API_KEY
 
 def fetch_omdb_data(imdb_id):
     """
@@ -18,12 +18,12 @@ def fetch_omdb_data(imdb_id):
     response = requests.get(url, params=params)
 
     if response.status_code != 200:
-        debug_print(f"Error fetching OMDb data for IMDb ID {imdb_id}")
+        print(f"Error fetching OMDb data for IMDb ID {imdb_id}")
         return None
 
     data = response.json()
     if data.get("Response") == "False":
-        debug_print(f"OMDb could not find data for IMDb ID {imdb_id}")
+        print(f"OMDb could not find data for IMDb ID {imdb_id}")
         return None
 
     # Extract fields of interest

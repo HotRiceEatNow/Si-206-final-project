@@ -1,6 +1,6 @@
 import requests
 from datetime import date
-from config import SERPAPI_API_KEY, debug_print
+from config import SERPAPI_API_KEY
 
 def fetch_showtime_slots(movie_title):
     """
@@ -35,7 +35,7 @@ def fetch_showtime_slots(movie_title):
 
     response = requests.get(url, params=params)
     if response.status_code != 200:
-        debug_print(f"Error fetching showtime data from SerpApi for '{movie_title}' (status {response.status_code})")
+        print(f"Error fetching showtime data from SerpApi for '{movie_title}' (status {response.status_code})")
         return 0
 
     data = response.json()
