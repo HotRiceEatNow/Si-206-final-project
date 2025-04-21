@@ -82,7 +82,7 @@ def get_or_create_genre_id(genre_name):
     Returns the genre_id from the Genres table.
     If the genre does not exist, inserts it and returns the new ID.
     """
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     # Normalize genre_name (strip spaces, make consistent case if needed)
@@ -210,7 +210,7 @@ def insert_showtimes_data(movie_id, slots_count):
     Inserts or updates the daily showtimes count in the Showtimes table
     for the given movie_id. We'll store the date as 'today'.
     """
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     today_str = date.today().isoformat()
