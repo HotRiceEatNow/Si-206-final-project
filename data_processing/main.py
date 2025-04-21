@@ -22,51 +22,77 @@ def fetch_data():
     cur.execute("""
         SELECT title, release_year, budget, total_gross, imdb_rating 
         FROM Movies
-        WHERE budget IS NOT NULL AND budget > 0 AND total_gross IS NOT NULL
     """)
     rows = cur.fetchall()
     conn.close()
 
-    cleaned_data = []
-    for title, year, budget, gross, rating in rows:
-        gross_int = clean_gross(gross)
-        if gross_int is None or gross_int == 0:
-            continue
-        if rating is None or rating == 0:
-            rating = None
-        cleaned_data.append({
-            "title": title,
-            "year": year,
-            "budget": budget,
-            "gross": gross_int,
-            "profit": gross_int - budget,
-            "imdb_rating": rating
-        })
-
-    return cleaned_data
+    # Return raw tuples
+    return rows
 
 
 def save_profitability_txt(data):
     path = os.path.join(OUTPUT_DIR, "profitability.txt")
+    valid_rows = []
+
+    for row in data:
+        title, year, budget, gross, rating = row
+        gross_clean = clean_gross(gross)
+
+        if budget is None or budget <= 0:
+            continue
+        if gross_clean is None or gross_clean == 0:
+            continue
+
+        profit = gross_clean - budget
+        valid_rows.append({
+            "title": title,
+            "budget": budget,
+            "gross": gross_clean,
+            "profit": profit
+        })
+
+    # Sort from highest profit to biggest loss
+    sorted_rows = sorted(valid_rows, key=lambda x: x["profit"], reverse=True)
+
     with open(path, "w") as f:
-        for row in sorted(data, key=lambda x: x["profit"], reverse=True):
-            profit = row["profit"]
-            action = "gained" if profit >= 0 else "lost"
+        for row in sorted_rows:
+            action = "gained" if row["profit"] >= 0 else "lost"
             f.write(
                 f"{row['title']} had a budget of ${row['budget']:,} and had a gross of ${row['gross']:,}, "
-                f"so it {action} ${abs(profit):,}.\n"
+                f"so it {action} ${abs(row['profit']):,}.\n"
             )
 
 
 def save_rating_vs_revenue_txt(data):
     path = os.path.join(OUTPUT_DIR, "rating_vs_revenue.txt")
-    filtered = [row for row in data if row["imdb_rating"] is not None]
-    sorted_rows = sorted(filtered, key=lambda x: x["imdb_rating"])
+    valid_rows = []
+
+    for row in data:
+        title, year, budget, gross, rating = row
+        gross_clean = clean_gross(gross)
+
+        if budget is None or budget <= 0:
+            continue
+        if gross_clean is None or gross_clean == 0:
+            continue
+        if rating is None or rating == 0:
+            continue
+
+        profit = gross_clean - budget
+        valid_rows.append({
+            "title": title,
+            "rating": rating,
+            "profit": profit
+        })
+
+    # Sort by increasing rating
+    sorted_rows = sorted(valid_rows, key=lambda x: x["rating"])
 
     with open(path, "w") as f:
         for row in sorted_rows:
+            action = "gained" if row["profit"] >= 0 else "lost"
             f.write(
-                f"{row['title']} had a rating of {row['imdb_rating']} and earned ${row['gross']:,}.\n"
+                f"{row['title']} had a rating of {row['rating']} and {action} ${abs(row['profit']):,}.\n"
             )
 
 
