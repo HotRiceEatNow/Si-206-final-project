@@ -1,6 +1,6 @@
 import requests
 import os
-from config import TMDB_API_KEY
+from config import TMDB_API_KEY, debug_print
 
 def get_last_page_retrieved():
     """
@@ -37,7 +37,7 @@ def fetch_tmdb_popular_movies(page):
 
     response = requests.get(url, params=params)
     if response.status_code != 200:
-        print(f"Error fetching TMDb data (status code {response.status_code})")
+        debug_print(f"Error fetching TMDb data (status code {response.status_code})")
         return []
 
     data = response.json()
@@ -58,7 +58,7 @@ def get_tmdb_movie_details(tmdb_id):
     response = requests.get(url, params=params)
 
     if response.status_code != 200:
-        print(f"Error fetching TMDb details for movie_id={tmdb_id} (status {response.status_code})")
+        debug_print(f"Error fetching TMDb details for movie_id={tmdb_id} (status {response.status_code})")
         return None, 0
 
     data = response.json()

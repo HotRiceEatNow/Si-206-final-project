@@ -5,3 +5,9 @@ BOXOFFICEMOJO_URL = "https://www.boxofficemojo.com/year/2025/"
 
 DB_PATH = "../movies.db"
 LIMIT   = 25
+
+DEBUG = True
+
+def debug_print(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)

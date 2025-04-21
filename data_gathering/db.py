@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import date
-from config import DB_PATH
+from config import DB_PATH, debug_print
 
 def create_database():
     """
@@ -250,25 +250,25 @@ def print_database_state():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    print("\n-- Genres Table --")
+    debug_print("\n-- Genres Table --")
     cur.execute("SELECT id, name FROM Genres ORDER BY id")
     genres = cur.fetchall()
     if genres:
         for g in genres:
-            print(f"  {g[0]}: {g[1]}")
+            debug_print(f"  {g[0]}: {g[1]}")
     else:
-        print("  (empty)")
+        debug_print("  (empty)")
 
-    print("\n-- Distributors Table --")
+    debug_print("\n-- Distributors Table --")
     cur.execute("SELECT id, name FROM Distributors ORDER BY id")
     distributors = cur.fetchall()
     if distributors:
         for d in distributors:
-            print(f"  {d[0]}: {d[1]}")
+            debug_print(f"  {d[0]}: {d[1]}")
     else:
-        print("  (empty)")
+        debug_print("  (empty)")
 
-    print("\n-- Movies Table --")
+    debug_print("\n-- Movies Table --")
     # select all of the columns in your updated schema
     cur.execute("""
         SELECT
@@ -301,7 +301,7 @@ def print_database_state():
 
     if movies:
         for m in movies:
-            print(f"""  {m[0]}: {m[1]} ({m[2]})
+            debug_print(f"""  {m[0]}: {m[1]} ({m[2]})
     Genre ID   : {fmt_num(m[3])}
     TMDb ID    : {fmt_num(m[4])}   IMDb ID : {fmt_str(m[5])}
     Popularity : {fmt_num(m[6], "{:.2f}")}   Vote Count : {fmt_num(m[7])}   Avg Vote : {fmt_num(m[8], "{:.1f}")}
@@ -312,9 +312,9 @@ def print_database_state():
     Distributor: {fmt_str(m[15])}
 """)
     else:
-        print("  (empty)")
+        debug_print("  (empty)")
 
-    print("\n-- Showtimes Table --")
+    debug_print("\n-- Showtimes Table --")
     cur.execute("""
         SELECT id, movie_id, show_date, slots_count
         FROM Showtimes
@@ -323,8 +323,8 @@ def print_database_state():
     showtimes = cur.fetchall()
     if showtimes:
         for s in showtimes:
-            print(f"  {s[0]}: movie_id={s[1]} | date={s[2]} | slots={s[3]}")
+            debug_print(f"  {s[0]}: movie_id={s[1]} | date={s[2]} | slots={s[3]}")
     else:
-        print("  (empty)")
+        debug_print("  (empty)")
 
     conn.close()
