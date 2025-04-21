@@ -1,7 +1,27 @@
-In the Lost Lands had a rating of 5.4 and earned $1,870,305.
-Captain America: Brave New World had a rating of 5.8 and earned $197,727,479.
-A Minecraft Movie had a rating of 6.0 and earned $303,326,515.
-Novocaine had a rating of 6.6 and earned $19,861,854.
-Mufasa: The Lion King had a rating of 6.6 and earned $254,567,693.
-Moana 2 had a rating of 6.7 and earned $460,405,297.
-Sonic the Hedgehog 3 had a rating of 6.9 and earned $236,115,100.
+Snow White had a rating of 1.6 and lost $198,624,530.
+Flight Risk had a rating of 5.3 and gained $4,783,527.
+In the Lost Lands had a rating of 5.4 and lost $53,129,695.
+Kraven the Hunter had a rating of 5.4 and lost $94,973,690.
+The Alto Knights had a rating of 5.7 and lost $38,896,336.
+A Working Man had a rating of 5.8 and lost $19,460,052.
+Captain America: Brave New World had a rating of 5.8 and gained $17,727,479.
+A Minecraft Movie had a rating of 6.0 and gained $194,627,000.
+Venom: The Last Dance had a rating of 6.0 and gained $19,755,882.
+Heart Eyes had a rating of 6.1 and gained $12,415,738.
+Peter Pan's Neverland Nightmare had a rating of 6.2 and lost $19,485.
+Dog Man had a rating of 6.3 and gained $57,970,355.
+Red One had a rating of 6.3 and lost $152,999,241.
+Novocaine had a rating of 6.6 and gained $1,861,854.
+Mufasa: The Lion King had a rating of 6.6 and gained $54,567,693.
+Gladiator II had a rating of 6.6 and lost $137,561,984.
+Moana 2 had a rating of 6.7 and gained $310,405,297.
+Sonic the Hedgehog 3 had a rating of 6.9 and gained $114,115,100.
+Mickey 17 had a rating of 6.9 and lost $72,098,156.
+Black Bag had a rating of 6.9 and lost $30,293,400.
+Companion had a rating of 7.0 and gained $10,809,101.
+The Substance had a rating of 7.3 and gained $84,795.
+Anora had a rating of 7.5 and gained $14,474,295.
+Memoir of a Snail had a rating of 7.8 and lost $3,680,202.
+Flow had a rating of 7.9 and gained $1,099,375.
+Warfare had a rating of 7.9 and lost $2,879,167.
+The Wild Robot had a rating of 8.2 and gained $65,901,945.
