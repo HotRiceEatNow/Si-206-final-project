@@ -60,8 +60,8 @@ def save_profitability_txt(data):
             )
 
 
-def save_rating_vs_revenue_txt(data):
-    path = os.path.join(OUTPUT_DIR, "rating_vs_revenue.txt")
+def save_rating_vs_profit_txt(data):
+    path = os.path.join(OUTPUT_DIR, "rating_vs_profit.txt")
     valid_rows = []
 
     for row in data:
@@ -171,7 +171,7 @@ def plot_profitability_bar_chart(data):
     plt.close()
 
 
-def plot_rating_vs_revenue_scatter(data):
+def plot_rating_vs_profit_scatter(data):
     ratings, profits = [], []
 
     for row in data:
@@ -201,7 +201,7 @@ def plot_rating_vs_revenue_scatter(data):
     ax.set_ylim(min_profit * 1.1, max_profit * 1.1)
 
     plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "rating_vs_revenue_scatter.png"))
+    plt.savefig(os.path.join(OUTPUT_DIR, "rating_vs_profit_scatter.png"))
     plt.close()
 
 
@@ -262,7 +262,7 @@ def main():
     save_profitability_txt(data)
 
     print("Writing rating vs revenue report...")
-    save_rating_vs_revenue_txt(data)
+    save_rating_vs_profit_txt(data)
 
     print("Writing average profitability per distributor report...")
     save_average_profitability_per_distributor_txt()
@@ -271,7 +271,7 @@ def main():
     plot_profitability_bar_chart(data)
 
     print("Creating rating vs revenue scatter plot...")
-    plot_rating_vs_revenue_scatter(data)
+    plot_rating_vs_profit_scatter(data)
 
     print("Creating average profitability per distributor bar chart...")
     plot_distributor_avg_profitability_bar_chart()
