@@ -1,0 +1,19 @@
+DreamWorks Distribution released 1 movies in our dataset and on average gained $57,970,355.00 per movie.
+Walt Disney Studios Motion Pictures released 4 movies in our dataset and on average gained $46,018,984.75 per movie.
+Universal Pictures released 2 movies in our dataset and on average gained $37,919,657.50 per movie.
+Neon released 1 movies in our dataset and on average gained $14,474,295.00 per movie.
+Angel Studios released 1 movies in our dataset and on average gained $13,065,248.00 per movie.
+Warner Bros. released 5 movies in our dataset and on average gained $10,008,321.80 per movie.
+Paramount Pictures International released 2 movies in our dataset and on average gained $7,138,796.00 per movie.
+Lionsgate released 1 movies in our dataset and on average gained $4,783,527.00 per movie.
+Janus Films released 1 movies in our dataset and on average gained $1,099,375.00 per movie.
+MUBI released 1 movies in our dataset and on average gained $84,795.00 per movie.
+Iconic Events Releasing released 1 movies in our dataset and on average lost $19,485.00 per movie.
+A24 released 1 movies in our dataset and on average lost $2,879,167.00 per movie.
+IFC Films released 1 movies in our dataset and on average lost $3,680,202.00 per movie.
+Paramount Pictures released 2 movies in our dataset and on average lost $11,723,442.00 per movie.
+Focus Features released 1 movies in our dataset and on average lost $30,293,400.00 per movie.
+20th Century Studios released 1 movies in our dataset and on average lost $32,677,289.00 per movie.
+Sony Pictures Releasing released 2 movies in our dataset and on average lost $37,608,904.00 per movie.
+Vertical Entertainment released 1 movies in our dataset and on average lost $53,129,695.00 per movie.
+Amazon MGM Studios released 2 movies in our dataset and on average lost $86,229,646.50 per movie.

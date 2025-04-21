@@ -38,7 +38,7 @@ def save_profitability_txt(data):
         title, year, budget, gross, rating = row
         gross_clean = clean_gross(gross)
 
-        if budget is None or budget <= 0 or gross_clean is None or gross_clean == 0:
+        if budget is None or budget <= 0 or gross_clean is None or gross_clean <= 0:
             continue
 
         profit = gross_clean - budget
@@ -68,7 +68,7 @@ def save_rating_vs_revenue_txt(data):
         title, year, budget, gross, rating = row
         gross_clean = clean_gross(gross)
 
-        if budget is None or budget <= 0 or gross_clean is None or gross_clean == 0 or rating is None or rating == 0:
+        if budget is None or budget <= 0 or gross_clean is None or gross_clean <= 0 or rating is None or rating <= 0:
             continue
 
         profit = gross_clean - budget
@@ -88,13 +88,51 @@ def save_rating_vs_revenue_txt(data):
             )
 
 
+def save_average_profitability_per_distributor_txt():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT Distributors.name, Movies.budget, Movies.total_gross
+        FROM Movies
+        JOIN Distributors ON Movies.distributor_id = Distributors.id
+        WHERE Movies.budget IS NOT NULL AND Movies.budget > 0
+          AND Movies.total_gross IS NOT NULL
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    distributor_stats = {}
+
+    for name, budget, gross in rows:
+        try:
+            gross_int = int(str(gross).replace("$", "").replace(",", ""))
+            profit = gross_int - budget
+        except:
+            continue
+
+        if name not in distributor_stats:
+            distributor_stats[name] = {"total_profit": 0, "num_movies": 0}
+        distributor_stats[name]["total_profit"] += profit
+        distributor_stats[name]["num_movies"] += 1
+
+    path = os.path.join(OUTPUT_DIR, "distributor_avg_profitability.txt")
+    with open(path, "w") as f:
+        for distributor, stats in sorted(distributor_stats.items(), key=lambda x: x[1]["total_profit"]/x[1]["num_movies"], reverse=True):
+            avg_profit = stats["total_profit"] / stats["num_movies"]
+            action = "gained" if avg_profit >= 0 else "lost"
+            f.write(
+                f"{distributor} released {stats['num_movies']} movies in our dataset and on average {action} ${abs(avg_profit):,.2f} per movie.\n"
+            )
+
+
 def plot_profitability_bar_chart(data):
     movie_data = []
 
     for row in data:
         title, _, budget, gross, _ = row
         gross_clean = clean_gross(gross)
-        if budget is None or budget <= 0 or gross_clean is None or gross_clean == 0:
+        if budget is None or budget <= 0 or gross_clean is None or gross_clean <= 0:
             continue
 
         profit = gross_clean - budget
@@ -139,7 +177,7 @@ def plot_rating_vs_revenue_scatter(data):
     for row in data:
         _, _, budget, gross, rating = row
         gross_clean = clean_gross(gross)
-        if budget is None or budget <= 0 or gross_clean is None or gross_clean == 0 or rating is None or rating == 0:
+        if budget is None or budget <= 0 or gross_clean is None or gross_clean <= 0 or rating is None or rating <= 0:
             continue
 
         profit = (gross_clean - budget) / 1_000_000  # Convert to millions
@@ -167,6 +205,55 @@ def plot_rating_vs_revenue_scatter(data):
     plt.close()
 
 
+def plot_distributor_avg_profitability_bar_chart():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT Distributors.name, Movies.budget, Movies.total_gross
+        FROM Movies
+        JOIN Distributors ON Movies.distributor_id = Distributors.id
+        WHERE Movies.budget IS NOT NULL AND Movies.budget > 0
+          AND Movies.total_gross IS NOT NULL
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    distributor_stats = {}
+
+    for name, budget, gross in rows:
+        try:
+            gross_int = int(str(gross).replace("$", "").replace(",", ""))
+            profit = gross_int - budget
+        except:
+            continue
+
+        if name not in distributor_stats:
+            distributor_stats[name] = {"total_profit": 0, "num_movies": 0}
+        distributor_stats[name]["total_profit"] += profit
+        distributor_stats[name]["num_movies"] += 1
+
+    distributor_avg_profits = {
+        name: stats["total_profit"] / stats["num_movies"]
+        for name, stats in distributor_stats.items()
+    }
+
+    # Sort by average profit
+    sorted_items = sorted(distributor_avg_profits.items(), key=lambda x: x[1], reverse=True)
+    distributors = [item[0] for item in sorted_items]
+    avg_profits_millions = [item[1] / 1_000_000 for item in sorted_items]
+
+    plt.figure(figsize=(12, max(6, len(distributors) * 0.3)))
+    bars = plt.barh(distributors, avg_profits_millions,
+                    color=["green" if p >= 0 else "red" for p in avg_profits_millions])
+    plt.xlabel("Average Profit per Movie (in millions of $)")
+    plt.title("Average Movie Profit by Distributor")
+    plt.axvline(0, color='black', linewidth=0.8)
+    plt.tight_layout()
+    plt.savefig("analysis_outputs/distributor_avg_profitability_bar_chart.png")
+    plt.close()
+
+
 def main():
     print("Fetching and cleaning data...")
     data = fetch_data()
@@ -177,11 +264,17 @@ def main():
     print("Writing rating vs revenue report...")
     save_rating_vs_revenue_txt(data)
 
+    print("Writing average profitability per distributor report...")
+    save_average_profitability_per_distributor_txt()
+
     print("Creating profitability bar chart...")
     plot_profitability_bar_chart(data)
 
     print("Creating rating vs revenue scatter plot...")
     plot_rating_vs_revenue_scatter(data)
+
+    print("Creating average profitability per distributor bar chart...")
+    plot_distributor_avg_profitability_bar_chart()
 
     print(f"\nAll reports and visualizations saved in '{OUTPUT_DIR}/'.")
 
