@@ -254,6 +254,7 @@ def plot_distributor_avg_profitability_bar_chart():
     plt.close()
 
 
+# EXTRA CREDIT
 def plot_release_year_vs_imdb_rating(data):
     years = []
     ratings = []
@@ -274,6 +275,7 @@ def plot_release_year_vs_imdb_rating(data):
     plt.close()
 
 
+# EXTRA CREDIT
 def plot_genre_vs_average_profitability():
     import sqlite3
     import matplotlib.pyplot as plt
