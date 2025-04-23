@@ -6,8 +6,8 @@ def create_database():
     """
     Initializes the SQLite database:
     - Genres table mapping unique ID to a Genre string
+    - Distributors table mapping unique ID to a Distributor string
     - Movies table giving details about each specific movie
-    - Showtimes table which gives info about showtimes for a movie (one-to-many)
     """
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -58,19 +58,6 @@ def create_database():
         """
         # popularity, vote_count, average_vote, and budget are from TMDb API
         # imdb_rating, and imdb_votes are from OMDb API
-    )
-
-    # -- Showtimes table
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS Showtimes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            movie_id INTEGER,
-            show_date TEXT,
-            slots_count INTEGER,
-            FOREIGN KEY(movie_id) REFERENCES Movies(id)
-        )
-        """
     )
 
     conn.commit()
@@ -205,47 +192,6 @@ def insert_or_update_movie(
     return movie_id
 
 
-def insert_showtimes_data(movie_id, slots_count):
-    """
-    Inserts or updates the daily showtimes count in the Showtimes table
-    for the given movie_id. We'll store the date as 'today'.
-    """
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-
-    today_str = date.today().isoformat()
-
-    # Check if we already inserted data for this movie/today
-    cur.execute(
-        "SELECT id FROM Showtimes WHERE movie_id = ? AND show_date = ?",
-        (movie_id, today_str)
-    )
-    row = cur.fetchone()
-
-    if row:
-        # Update existing record for today's date
-        cur.execute(
-            """
-            UPDATE Showtimes
-            SET slots_count = ?
-            WHERE movie_id = ? AND show_date = ?
-            """,
-            (slots_count, movie_id, today_str)
-        )
-    else:
-        # Insert new record
-        cur.execute(
-            """
-            INSERT INTO Showtimes (movie_id, show_date, slots_count)
-            VALUES (?, ?, ?)
-            """,
-            (movie_id, today_str, slots_count)
-        )
-
-    conn.commit()
-    conn.close()
-
-
 def print_database_state():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -311,19 +257,6 @@ def print_database_state():
     Total Gross: {fmt_str(m[14])}
     Distributor: {fmt_str(m[15])}
 """)
-    else:
-        print("  (empty)")
-
-    print("\n-- Showtimes Table --")
-    cur.execute("""
-        SELECT id, movie_id, show_date, slots_count
-        FROM Showtimes
-        ORDER BY id DESC
-    """)
-    showtimes = cur.fetchall()
-    if showtimes:
-        for s in showtimes:
-            print(f"  {s[0]}: movie_id={s[1]} | date={s[2]} | slots={s[3]}")
     else:
         print("  (empty)")
 

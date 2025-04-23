@@ -1,10 +1,9 @@
 import time
 
 from config import LIMIT
-from db import create_database, get_or_create_genre_id, get_or_create_distributor_id, insert_or_update_movie, insert_showtimes_data, print_database_state
+from db import create_database, get_or_create_genre_id, get_or_create_distributor_id, insert_or_update_movie, print_database_state
 from tmdb import fetch_tmdb_popular_movies, get_tmdb_movie_details, get_last_page_retrieved, set_last_page_retrieved
 from omdb import fetch_omdb_data
-from showtimes import fetch_showtime_slots
 from boxofficemojo import fetch_bom_data_for_title
 
 def main():
@@ -110,11 +109,6 @@ def main():
             distributor=dist_id
         )
         print(f"> Inserted/Updated Movie ID: {movie_id}")
-
-        # Fetch showtimes from Serp here
-        print(f"> Fetching showtimes for: '{title}'")
-        slots_count = fetch_showtime_slots(title)
-        insert_showtimes_data(movie_id, slots_count)
 
         time.sleep(0.3)  # Be kind to the APIs
 
