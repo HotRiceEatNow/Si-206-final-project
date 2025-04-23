@@ -32,6 +32,7 @@ import time
 from datetime import date
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import defaultdict
 
 # --------------------------------------------------------------------
 # API KEYS (Replace with your actual keys or set environment variables)
@@ -663,6 +664,53 @@ def plot_revenue_trends(movie_data):
     plt.tight_layout()
     plt.show()
 
+# Genre-wise average rating chart
+def plot_average_rating_by_genre():
+    """
+    Plots the average IMDb rating for each genre using OMDbData.
+    A movie with multiple genres contributes its rating to each listed genre.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT omdb.genre, omdb.imdb_rating
+        FROM OMDbData omdb
+        JOIN Movies m ON omdb.movie_id = m.id
+        WHERE omdb.imdb_rating IS NOT NULL
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    genre_ratings = defaultdict(list)
+
+    for genre_string, rating in rows:
+        if genre_string:
+            genres = [g.strip() for g in genre_string.split(',')]
+            for genre in genres:
+                try:
+                    genre_ratings[genre].append(float(rating))
+                except ValueError:
+                    continue
+
+    # Compute averages
+    genre_avg = {genre: sum(ratings)/len(ratings) for genre, ratings in genre_ratings.items() if ratings}
+
+    # Sort by average rating
+    sorted_genres = sorted(genre_avg.items(), key=lambda x: x[1], reverse=True)
+
+    # Plot
+    genres = [g[0] for g in sorted_genres]
+    avg_ratings = [g[1] for g in sorted_genres]
+
+    plt.figure(figsize=(12, 6))
+    plt.bar(genres, avg_ratings, color='skyblue')
+    plt.xticks(rotation=45, ha='right')
+    plt.ylabel('Average IMDb Rating')
+    plt.title('Average IMDb Rating by Genre')
+    plt.tight_layout()
+    plt.show()
+
 # Main function to perform analysis and visualization
 def analyze_and_visualize():
     """
@@ -676,6 +724,7 @@ def analyze_and_visualize():
     plot_revenue_comparison(profitability_data)
     plot_rating_comparison(movie_data)
     plot_revenue_trends(movie_data)
+    plot_average_rating_by_genre()
 
 # Running the analysis
 analyze_and_visualize()
