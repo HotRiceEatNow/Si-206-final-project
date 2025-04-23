@@ -1,31 +1,40 @@
 Moana 2 had a budget of $150,000,000 and had a gross of $460,405,297, so it gained $310,405,297.
-A Minecraft Movie had a budget of $150,000,000 and had a gross of $344,627,000, so it gained $194,627,000.
+A Minecraft Movie had a budget of $150,000,000 and had a gross of $349,515,057, so it gained $199,515,057.
 Sonic the Hedgehog 3 had a budget of $122,000,000 and had a gross of $236,115,100, so it gained $114,115,100.
 The Wild Robot had a budget of $78,000,000 and had a gross of $143,901,945, so it gained $65,901,945.
 Dog Man had a budget of $40,000,000 and had a gross of $97,970,355, so it gained $57,970,355.
 Mufasa: The Lion King had a budget of $200,000,000 and had a gross of $254,567,693, so it gained $54,567,693.
+Smile 2 had a budget of $28,000,000 and had a gross of $69,012,586, so it gained $41,012,586.
+The King of Kings had a budget of $15,000,000 and had a gross of $47,744,139, so it gained $32,744,139.
+The Monkey had a budget of $10,000,000 and had a gross of $39,724,909, so it gained $29,724,909.
+Captain America: Brave New World had a budget of $180,000,000 and had a gross of $200,168,699, so it gained $20,168,699.
 Venom: The Last Dance had a budget of $120,000,000 and had a gross of $139,755,882, so it gained $19,755,882.
-Captain America: Brave New World had a budget of $180,000,000 and had a gross of $197,727,479, so it gained $17,727,479.
 Anora had a budget of $6,000,000 and had a gross of $20,474,295, so it gained $14,474,295.
-The King of Kings had a budget of $15,000,000 and had a gross of $28,065,248, so it gained $13,065,248.
+Conclave had a budget of $20,000,000 and had a gross of $32,580,655, so it gained $12,580,655.
 Heart Eyes had a budget of $18,000,000 and had a gross of $30,415,738, so it gained $12,415,738.
 Companion had a budget of $10,000,000 and had a gross of $20,809,101, so it gained $10,809,101.
-The Woman in the Yard had a budget of $12,000,000 and had a gross of $21,937,370, so it gained $9,937,370.
+The Woman in the Yard had a budget of $12,000,000 and had a gross of $22,027,725, so it gained $10,027,725.
+Presence had a budget of $2,000,000 and had a gross of $6,900,044, so it gained $4,900,044.
 Flight Risk had a budget of $25,000,000 and had a gross of $29,783,527, so it gained $4,783,527.
+Drop had a budget of $11,000,000 and had a gross of $13,842,490, so it gained $2,842,490.
 Novocaine had a budget of $18,000,000 and had a gross of $19,861,854, so it gained $1,861,854.
 Flow had a budget of $3,700,000 and had a gross of $4,799,375, so it gained $1,099,375.
 The Substance had a budget of $17,500,000 and had a gross of $17,584,795, so it gained $84,795.
 Peter Pan's Neverland Nightmare had a budget of $250,000 and had a gross of $230,515, so it lost $19,485.
-Warfare had a budget of $20,000,000 and had a gross of $17,120,833, so it lost $2,879,167.
+Love Hurts had a budget of $18,000,000 and had a gross of $15,683,090, so it lost $2,316,910.
 Memoir of a Snail had a budget of $4,350,000 and had a gross of $669,798, so it lost $3,680,202.
-A Working Man had a budget of $40,000,000 and had a gross of $20,539,948, so it lost $19,460,052.
-Black Bag had a budget of $50,000,000 and had a gross of $19,706,600, so it lost $30,293,400.
-The Amateur had a budget of $60,000,000 and had a gross of $27,322,711, so it lost $32,677,289.
+A Working Man had a budget of $40,000,000 and had a gross of $36,059,914, so it lost $3,940,086.
+Warfare had a budget of $20,000,000 and had a gross of $12,265,197, so it lost $7,734,803.
+Opus had a budget of $10,000,000 and had a gross of $1,993,397, so it lost $8,006,603.
+The Lord of the Rings: The War of the Rohirrim had a budget of $30,000,000 and had a gross of $9,158,572, so it lost $20,841,428.
+Black Bag had a budget of $50,000,000 and had a gross of $21,424,195, so it lost $28,575,805.
+The Amateur had a budget of $60,000,000 and had a gross of $27,900,991, so it lost $32,099,009.
+Sinners had a budget of $90,000,000 and had a gross of $55,807,653, so it lost $34,192,347.
 The Alto Knights had a budget of $45,000,000 and had a gross of $6,103,664, so it lost $38,896,336.
-Sinners had a budget of $90,000,000 and had a gross of $45,600,000, so it lost $44,400,000.
 In the Lost Lands had a budget of $55,000,000 and had a gross of $1,870,305, so it lost $53,129,695.
-Mickey 17 had a budget of $118,000,000 and had a gross of $45,901,844, so it lost $72,098,156.
+Ne Zha 2 had a budget of $80,000,000 and had a gross of $20,858,156, so it lost $59,141,844.
+Mickey 17 had a budget of $118,000,000 and had a gross of $46,012,474, so it lost $71,987,526.
 Kraven the Hunter had a budget of $120,000,000 and had a gross of $25,026,310, so it lost $94,973,690.
 Gladiator II had a budget of $310,000,000 and had a gross of $172,438,016, so it lost $137,561,984.
 Red One had a budget of $250,000,000 and had a gross of $97,000,759, so it lost $152,999,241.
-Snow White had a budget of $270,000,000 and had a gross of $71,375,470, so it lost $198,624,530.
+Snow White had a budget of $270,000,000 and had a gross of $84,895,433, so it lost $185,104,567.
