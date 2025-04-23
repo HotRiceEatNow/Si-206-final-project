@@ -254,6 +254,79 @@ def plot_distributor_avg_profitability_bar_chart():
     plt.close()
 
 
+def plot_release_year_vs_imdb_rating(data):
+    years = []
+    ratings = []
+
+    for title, release_year, budget, total_gross, imdb_rating in data:
+        if release_year is not None and imdb_rating is not None:
+            years.append(release_year)
+            ratings.append(imdb_rating)
+
+    plt.figure(figsize=(12, 6))
+    plt.scatter(years, ratings, alpha=0.6, color='blue', edgecolors='k')
+    plt.xlabel("Release Year")
+    plt.ylabel("IMDb Rating (on a scale from 1–10)")
+    plt.title("Release Year vs IMDb Rating")
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    plt.savefig("analysis_outputs/release_year_vs_imdb_rating.png")
+    plt.close()
+
+
+def plot_genre_vs_average_profitability():
+    import sqlite3
+    import matplotlib.pyplot as plt
+
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT Genres.name, Movies.budget, Movies.total_gross
+        FROM Movies
+        JOIN Genres ON Movies.genre_id = Genres.id
+        WHERE Movies.budget IS NOT NULL AND Movies.budget > 0
+          AND Movies.total_gross IS NOT NULL
+    """)
+    rows = cur.fetchall()
+    conn.close()
+
+    genre_stats = {}
+
+    for genre, budget, gross in rows:
+        try:
+            gross_int = int(str(gross).replace("$", "").replace(",", ""))
+            profit = gross_int - budget
+        except:
+            continue
+
+        if genre not in genre_stats:
+            genre_stats[genre] = {"total_profit": 0, "num_movies": 0}
+        genre_stats[genre]["total_profit"] += profit
+        genre_stats[genre]["num_movies"] += 1
+
+    genre_avg_profits = {
+        genre: stats["total_profit"] / stats["num_movies"]
+        for genre, stats in genre_stats.items()
+    }
+
+    # Convert to millions of dollars
+    sorted_data = sorted(genre_avg_profits.items(), key=lambda x: x[1], reverse=True)
+    genres = [item[0] for item in sorted_data]
+    avg_profits_millions = [item[1] / 1e6 for item in sorted_data]
+
+    # Plot
+    plt.figure(figsize=(14, 6))
+    bars = plt.bar(genres, avg_profits_millions, color='lightcoral', edgecolor='black')
+    plt.xticks(rotation=45, ha='right')
+    plt.ylabel("Average Profit (in millions of $)")
+    plt.title("Average Profitability by Genre")
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    plt.savefig("analysis_outputs/genre_vs_avg_profitability.png")
+    plt.close()
+
+
 def main():
     print("Fetching and cleaning data...")
     data = fetch_data()
@@ -275,6 +348,14 @@ def main():
 
     print("Creating average profitability per distributor bar chart...")
     plot_distributor_avg_profitability_bar_chart()
+
+    # EXTRA CREDIT - VISUALIZATION 1
+    print("Creating release year vs rating scatter plot...")
+    plot_release_year_vs_imdb_rating(data)
+
+    # EXTRA CREDIT - VISUALIZATION 2
+    print("Creating genre vs average profitability bar chart...")
+    plot_genre_vs_average_profitability()
 
     print(f"\nAll reports and visualizations saved in '{OUTPUT_DIR}/'.")
 
